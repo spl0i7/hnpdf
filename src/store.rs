@@ -2,6 +2,7 @@ use std::str::FromStr;
 use std::string::FromUtf8Error;
 use std::sync::{LockResult, MutexGuard};
 use regex::Regex;
+use rocket::serde::Serialize;
 use rusqlite::Connection;
 use crate::client::{ClientError, Hit, Root};
 use thiserror::Error;
@@ -21,7 +22,7 @@ pub enum StoreError {
 
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize)]
 pub enum EntryKind {
     Story,
     Comment,
@@ -56,7 +57,7 @@ impl FromStr for EntryKind {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct Entry {
     id: String,
     kind: EntryKind,
@@ -127,6 +128,28 @@ impl Entry {
         }
 
         Ok(())
+    }
+    pub fn get_entries(conn: &mut MutexGuard<Connection>) -> Result<Vec<Entry>, StoreError> {
+        let mut stmt = conn.prepare(
+            "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents ORDER BY timestamp DESC LIMIT 5")?;
+
+        let entries = stmt.query_map([], |row| {
+            let kind_str: String = row.get(1)?;
+
+
+            Ok(Entry {
+                id: row.get(0)?,
+                kind: EntryKind::from_str(kind_str.as_str()).unwrap(),
+                timestamp: row.get(2)?,
+                pdf_link: row.get(3)?,
+                story_title: row.get(4)?,
+                comment_text: row.get(5)?,
+                parent_id: row.get(6)?,
+                author: row.get(7)?,
+            })
+        })?.filter_map(|x| x.ok()).collect::<Vec<Entry>>();
+
+        Ok(entries)
     }
 }
 

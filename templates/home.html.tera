@@ -1,0 +1,12 @@
+{% for entry in entries %}
+<ul>
+      <li>{{ entry.id }}</li>
+      <li>{{ entry.kind }}</li>
+      <li>{{ entry.timestamp }}</li>
+      <li>{{ entry.story_title }}</li>
+      <li>{{ entry.comment_text }}</li>
+      <li>{{ entry.parent_id }}</li>
+      <li>{{ entry.author }}</li>
+      <li><a href="{{entry.pdf_link}}">PDF</a></li>
+</ul>
+{% endfor %}

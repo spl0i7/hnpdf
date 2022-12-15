@@ -1,19 +1,22 @@
 mod client;
 mod store;
 
-
+use rocket::{get, State};
 use std::error::Error;
-use std::sync::{Arc, Mutex};
+use std::net::SocketAddr;
+use std::sync::{Arc, LockResult, Mutex};
 use std::time::Duration;
 use envconfig::Envconfig;
 use rusqlite::{Connection};
 use tokio::time::sleep;
 use crate::store::Entry;
-
+use rocket::routes;
+use rocket_dyn_templates::{Template, context};
 
 const SCHEMA: &str = include_str!("../res/schema.sql");
 
 type FencedDB = Arc<Mutex<Connection>>;
+
 
 #[derive(Envconfig)]
 struct Config {
@@ -22,12 +25,19 @@ struct Config {
 }
 
 
+#[get("/")]
+fn hello(s: &State<FencedDB>) -> Template {
+    let entries = Entry::get_entries(&mut s.lock().unwrap()).unwrap();
+
+    Template::render("home", context! { entries: entries })
+}
+
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::init_from_env()?;
 
-    let mut conn = db_connection(config)?;
-
+    let mut conn = db_connection(config).unwrap();
 
     let mut db = conn.clone();
 
@@ -39,9 +49,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             tokio::time::sleep(Duration::from_secs(60)).await;
         }
-    }).await?;
+    });
+
+
+
+    let _rocket = rocket::build()
+        .mount("/", routes![hello])
+        .attach(Template::fairing())
+        .manage(conn.clone())
+        .launch()
+        .await?;
 
     Ok(())
+
 }
 
 fn db_connection(config: Config) -> Result<FencedDB, Box<dyn std::error::Error>> {
