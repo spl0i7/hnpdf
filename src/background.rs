@@ -27,7 +27,7 @@ pub(crate) async fn start_scraping(mut db: FencedDB, interval: time::Duration) {
     tokio::spawn(async move {
         loop {
             if let Err(e) = fetch_pdfs(&mut db).await {
-                println!("{}", e);
+                println!("{e}");
             }
             tokio::time::sleep(interval).await;
         }

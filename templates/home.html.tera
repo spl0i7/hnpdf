@@ -3,8 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="This website is a collection of links to PDFs found on Hacker News. It collects PDFs which have been posted by the community as story or comment">
     <title>Hacker News PDFs</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="preload" as="style" onload="this.rel='stylesheet'" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" as="style">
   </head>
   <style>
     .hn-orange {
@@ -14,8 +15,8 @@
   <body>
   <section class="hero hn-orange">
     <div class="hero-body">
-      <h1 class="title has-text-white is-size-1 has-text-centered">
-        HN PDF
+      <h1 class="title is-size-1 has-text-centered">
+        <a class="has-text-white" href="/">HN PDF</a>
       </p>
       <p class="subtitle has-text-white has-text-weight-bold">
         PDF(s) shared on <a class="has-text-black" href="https://news.ycombinator.com" target="_blank">Hackernews</a>
@@ -36,14 +37,10 @@
           </div>
 
         {% if entry.comment_text %}
-            <div class="content">
+            <div class="content is-clipped">
               <b>Comment</b> <p>{{ entry.comment_text | safe }}<p>
             </div>
         {% endif %}
-
-        <div class="content">
-              <time datetime="2016-1-1">{{ entry.timestamp | date(format="%Y-%m-%d %H:%M", timezone="UTC")}}</time>
-        </div>
         <div class="buttons">
           <a class="button is-info" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
           <a class="button is-success" href="{{entry.pdf_link}}" target="_blank">PDF</a>
