@@ -1,13 +1,14 @@
+use std::cmp::{max, min};
 use std::str::FromStr;
 use std::string::FromUtf8Error;
-use std::sync::{LockResult, MutexGuard};
+use std::sync::MutexGuard;
 use regex::Regex;
 use rocket::serde::Serialize;
 use rusqlite::Connection;
-use crate::client::{ClientError, Hit, Root};
+use crate::client::{Hit};
 use thiserror::Error;
 use crate::store::EntryKind::Unknown;
-use crate::store::StoreError::{ParseError, RegexError};
+use crate::store::StoreError::{ParseError};
 
 #[derive(Error, Debug)]
 pub enum StoreError {
@@ -72,8 +73,6 @@ pub struct Entry {
 
 impl Entry {
     pub fn from_hit(r: &Hit) -> Result<Entry, StoreError> {
-        let pdf_re = Regex::new(r".*(https?://.*pdf)")?;
-
         let mut entry = Entry {
             id: r.object_id.clone(),
             timestamp: r.created_at_i,
@@ -113,7 +112,7 @@ impl Entry {
     }
 
     fn extract_url(s: &str) -> Result<String, StoreError> {
-        let re = Regex::new(r".*(https?://.*pdf)")?;
+        let re = Regex::new(r".*(https?://.*\.pdf)")?;
         let caps = re.captures(s).ok_or(ParseError)?;
 
         Ok(caps.get(1)
@@ -129,11 +128,11 @@ impl Entry {
 
         Ok(())
     }
-    pub fn get_entries(conn: &mut MutexGuard<Connection>) -> Result<Vec<Entry>, StoreError> {
+    pub fn get_entries(conn: &mut MutexGuard<Connection>, from: u64, limit: u64) -> Result<Vec<Entry>, StoreError> {
         let mut stmt = conn.prepare(
-            "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents ORDER BY timestamp DESC LIMIT 5")?;
+            "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents WHERE timestamp < ? ORDER BY timestamp DESC LIMIT ?")?;
 
-        let entries = stmt.query_map([], |row| {
+        let entries = stmt.query_map([from, min(limit, 20)], |row| {
             let kind_str: String = row.get(1)?;
 
 

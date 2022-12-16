@@ -1,12 +1,47 @@
-{% for entry in entries %}
-<ul>
-      <li>{{ entry.id }}</li>
-      <li>{{ entry.kind }}</li>
-      <li>{{ entry.timestamp }}</li>
-      <li>{{ entry.story_title }}</li>
-      <li>{{ entry.comment_text }}</li>
-      <li>{{ entry.parent_id }}</li>
-      <li>{{ entry.author }}</li>
-      <li><a href="{{entry.pdf_link}}">PDF</a></li>
-</ul>
-{% endfor %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello Bulma!</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <script>
+    function epoch_to_readable(timestamp) {
+         const d = new Date(timestamp * 1000);
+         return d.getFullYear() + "-" +
+              ("00" + (d.getMonth() + 1)).slice(-2) + "-" +
+              ("00" + d.getDate()).slice(-2) + " " +
+              ("00" + d.getHours()).slice(-2) + ":" +
+              ("00" + d.getMinutes()).slice(-2) + ":" +
+              ("00" + d.getSeconds()).slice(-2)
+    }
+    </script>
+  </head>
+  <body>
+  <section class="section">
+  {% for entry in entries %}
+      <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">
+            {{entry.kind}}
+          </p>
+          <button class="card-header-icon" aria-label="more options">
+            <span class="icon">
+              <i class="fas fa-angle-down" aria-hidden="true"></i>
+            </span>
+          </button>
+        </header>
+        <div class="card-content">
+          <div class="content">
+            {{ entry.story_title }}
+          </div>
+        </div>
+        <footer class="card-footer">
+          <a href="{{entry.pdf_link}}" class="card-footer-item">PDF</a>
+          <time datetime="2016-1-1" class="card-footer-item">epoch_to_readable({{ entry.timestamp }})</time>
+        </footer>
+      </div>
+    {% endfor %}
+  </section>
+  </body>
+</html>
