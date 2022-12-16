@@ -9,11 +9,13 @@ use crate::store::{Entry};
 
 #[get("/?<from>&<limit>")]
 pub(crate) fn index(state: &State<FencedDB>, from: Option<u64>, limit: Option<u64>) -> Result<Template, Status> {
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default().as_secs();
 
-    let entries = Entry::
-    get_entries(&mut state.lock().map_err(|_| Status::InternalServerError)?, from.unwrap_or(now), limit.unwrap_or(10))
-        .map_err(|_| Status::InternalServerError)?;
+    let db = &mut state.lock().map_err(|_| Status::InternalServerError)?;
+
+    let entries = Entry::get_entries(db, from.unwrap_or(now), limit.unwrap_or(10)).map_err(|_| Status::InternalServerError)?;
 
     Ok(Template::render("home", context! { entries: entries }))
 }

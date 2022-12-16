@@ -15,11 +15,11 @@ pub enum StoreError {
     #[error("...")]
     Parse,
     #[error("...")]
-    Regex(#[from] regex::Error),
+    RegexError(#[from] regex::Error),
     #[error("...")]
-    UTF8(#[from] FromUtf8Error),
+    UTF8Error(#[from] FromUtf8Error),
     #[error("...")]
-    SQL(#[from] rusqlite::Error),
+    SQLError(#[from] rusqlite::Error),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize)]
