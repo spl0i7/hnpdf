@@ -17,7 +17,7 @@ pub(crate) async fn fetch_pdfs(conn: &mut FencedDB) -> Result<(), Box<dyn Error 
 
     {
         let mut conn = conn.lock()?;
-        let _ = Entry::store_entries(&mut conn, &hits);
+        Entry::store_entries(&mut conn, &hits)?;
     }
 
     Ok(())
@@ -26,7 +26,6 @@ pub(crate) async fn fetch_pdfs(conn: &mut FencedDB) -> Result<(), Box<dyn Error 
 pub(crate) async fn start_scraping(mut db: FencedDB, interval: time::Duration) {
     tokio::spawn(async move {
         loop {
-            println!("starting fetch cycle");
             if let Err(e) = fetch_pdfs(&mut db).await {
                 println!("{}", e);
             }

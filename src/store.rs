@@ -1,4 +1,4 @@
-use std::cmp::{max, min};
+use std::cmp::{min};
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 use std::sync::MutexGuard;
@@ -8,19 +8,18 @@ use rusqlite::Connection;
 use crate::client::{Hit};
 use thiserror::Error;
 use crate::store::EntryKind::Unknown;
-use crate::store::StoreError::{ParseError};
+use crate::store::StoreError::{Parse};
 
 #[derive(Error, Debug)]
 pub enum StoreError {
     #[error("...")]
-    ParseError,
+    Parse,
     #[error("...")]
-    RegexError(#[from] regex::Error),
+    Regex(#[from] regex::Error),
     #[error("...")]
-    UTF8Error(#[from] FromUtf8Error),
+    UTF8(#[from] FromUtf8Error),
     #[error("...")]
-    SQLError(#[from] rusqlite::Error),
-
+    SQL(#[from] rusqlite::Error),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize)]
@@ -104,7 +103,7 @@ impl Entry {
         }
 
         if entry.kind == EntryKind::Unknown {
-            return Err(ParseError);
+            return Err(Parse);
         }
 
 
@@ -113,7 +112,7 @@ impl Entry {
 
     fn extract_url(s: &str) -> Result<String, StoreError> {
         let re = Regex::new(r".*(https?://.*\.pdf)")?;
-        let caps = re.captures(s).ok_or(ParseError)?;
+        let caps = re.captures(s).ok_or(Parse)?;
 
         Ok(caps.get(1)
             .map_or("", |m| m.as_str())

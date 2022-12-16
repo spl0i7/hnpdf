@@ -33,7 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let _ = background::start_scraping(conn.clone(), Duration::from_secs(config.scrape_interval)).await;
 
-
     let _rocket = rocket::build()
         .mount("/", routes![routes::index])
         .attach(Template::fairing())

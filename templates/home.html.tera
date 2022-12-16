@@ -3,45 +3,59 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello Bulma!</title>
+    <title>Hacker News PDFs</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <script>
-    function epoch_to_readable(timestamp) {
-         const d = new Date(timestamp * 1000);
-         return d.getFullYear() + "-" +
-              ("00" + (d.getMonth() + 1)).slice(-2) + "-" +
-              ("00" + d.getDate()).slice(-2) + " " +
-              ("00" + d.getHours()).slice(-2) + ":" +
-              ("00" + d.getMinutes()).slice(-2) + ":" +
-              ("00" + d.getSeconds()).slice(-2)
-    }
-    </script>
   </head>
+  <style>
+    .hn-orange {
+        background-color: #ff6600
+    }
+  </style>
   <body>
-  <section class="section">
+  <section class="hero hn-orange">
+    <div class="hero-body">
+      <h1 class="title has-text-white is-size-1 has-text-centered">
+        HN PDF
+      </p>
+      <p class="subtitle has-text-white has-text-weight-bold">
+        PDF(s) shared on <a class="has-text-black" href="https://news.ycombinator.com" target="_blank">Hackernews</a>
+      </p>
+    </div>
+  </section>
+  <section class="section container p-6">
   {% for entry in entries %}
-      <div class="card">
+      <div class="card mb-4">
         <header class="card-header">
           <p class="card-header-title">
-            {{entry.kind}}
+            {{entry.kind}} from {{entry.author}} <span class="pl-3 is-size-7">{{ entry.timestamp | date(format="%Y-%m-%d %H:%M UTC", timezone="UTC")}}</span>
           </p>
-          <button class="card-header-icon" aria-label="more options">
-            <span class="icon">
-              <i class="fas fa-angle-down" aria-hidden="true"></i>
-            </span>
-          </button>
         </header>
         <div class="card-content">
-          <div class="content">
-            {{ entry.story_title }}
+          <div class="content has-text-weight-bold">
+            <p> {{ entry.story_title }} </p>
           </div>
+
+        {% if entry.comment_text %}
+            <div class="content">
+              <b>Comment</b> <p>{{ entry.comment_text | safe }}<p>
+            </div>
+        {% endif %}
+
+        <div class="content">
+              <time datetime="2016-1-1">{{ entry.timestamp | date(format="%Y-%m-%d %H:%M", timezone="UTC")}}</time>
         </div>
-        <footer class="card-footer">
-          <a href="{{entry.pdf_link}}" class="card-footer-item">PDF</a>
-          <time datetime="2016-1-1" class="card-footer-item">epoch_to_readable({{ entry.timestamp }})</time>
-        </footer>
+        <div class="buttons">
+          <a class="button is-info" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
+          <a class="button is-success" href="{{entry.pdf_link}}" target="_blank">PDF</a>
+        </div>
       </div>
+     </div>
     {% endfor %}
   </section>
+  <nav class="pagination is-centered pb-3" role="navigation" aria-label="pagination">
+    <ul class="pagination-list">
+      <li><a class="pagination-link button is-danger" href="/?from={{entries | map(attribute="timestamp") |last }}" aria-label="Previous">Previous</a></li>
+    </ul>
+  </nav>
   </body>
 </html>
