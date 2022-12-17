@@ -1,5 +1,7 @@
 # HN PDF
 
+![screenshot](res/screenshot.png)
+
 HNPDF is a simple web app that allows archiving PDF files shared on Hacker News. It works by scraping the website for links to PDFs in stories and comments, and then saving them to a local SQLite database. The app also allows users to filter the text by keyword, so they can only download documents that are relevant to them.
 
 

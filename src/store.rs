@@ -165,7 +165,7 @@ impl Item {
 
 #[cfg(test)]
 mod tests {
-    use rocket::yansi::Color::Default;
+    use core::default::Default;
     use crate::client::Hit;
     use crate::store::Item;
 
