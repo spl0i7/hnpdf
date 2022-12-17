@@ -9,7 +9,7 @@
         </header>
         <div class="card-content">
           <div class="content has-text-weight-bold">
-            <p> {{ entry.story_title }} </p>
+            <p class="content"> {{ entry.story_title }} </p>
           </div>
 
         {% if entry.comment_text %}
@@ -18,8 +18,8 @@
             </div>
         {% endif %}
         <div class="buttons">
-          <a class="button is-info" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
-          <a class="button is-success" href="{{entry.pdf_link}}" target="_blank">PDF</a>
+          <a class="button is-info is-light" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
+          <a class="button is-success is-light" href="{{entry.pdf_link}}" target="_blank">PDF</a>
         </div>
       </div>
      </div>

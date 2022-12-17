@@ -10,3 +10,13 @@ CREATE TABLE IF NOT EXISTS contents  (
 );
 
 CREATE INDEX IF NOT EXISTS timestamp_idx ON contents (timestamp);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS content_search USING fts5(id, link, story_title, comment_text, author);
+
+CREATE TRIGGER IF NOT EXISTS content_search_trigger AFTER INSERT
+    ON contents
+BEGIN
+    INSERT INTO content_search(id, link, story_title, comment_text, author) VALUES (NEW.id, NEW.link, NEW.story_title, NEW.comment_text, NEW.author);
+END;
+
+INSERT INTO content_search(id, link, story_title, comment_text, author) SELECT id, link, story_title, comment_text, author from contents;

@@ -1,0 +1,50 @@
+{% extends "head" %}
+{% block content %}
+<script>
+    function highlight(text) {
+        const contents = document.getElementsByClassName("content");
+
+        for (let i = 0; i < contents.length; i++) {
+            const inputText = contents[i];
+            const innerHTML = inputText.innerHTML;
+            const index = innerHTML.indexOf(text);
+            if (index >= 0) {
+                inputText.innerHTML = innerHTML.split(text).join('<span class="highlight">' + text + '</span>');
+            }
+        }
+    }
+
+    window.onload = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const myParam = urlParams.get('text');
+        highlight(myParam)
+    }
+</script>
+{% for entry in entries %}
+<div class="card mb-4">
+    <header class="card-header">
+        <a class="card-header-title" href="/item/{{entry.id}}">
+            {{entry.kind}} from {{entry.author}} <span class="pl-3 is-size-7">| {{ entry.timestamp | date(format="%Y-%m-%d %H:%M UTC", timezone="UTC")}}</span>
+        </a>
+    </header>
+    <div class="card-content">
+        <div class="content has-text-weight-bold">
+            <p class="content"> {{ entry.story_title }} </p>
+        </div>
+
+        {% if entry.comment_text %}
+        <div class="content is-clipped">
+            <b>Comment</b>
+            <p>{{ entry.comment_text | safe }}
+            <p>
+        </div>
+        {% endif %}
+        <div class="buttons">
+            <a class="button is-info is-light" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original
+                Post</a>
+            <a class="button is-success is-light" href="{{entry.pdf_link}}" target="_blank">PDF</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock content %}

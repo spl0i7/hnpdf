@@ -11,11 +11,15 @@
     .hn-orange {
       background-color: #ff6600
     }
+    .highlight {
+      background-color: yellow;
+      border-style: dashed;
+    }
   </style>
   {% endblock head %}
 </head>
 <body>
-<section class="hero hn-orange">
+<section class="hero hn-orange pb-5">
   <div class="hero-body">
     <h1 class="title is-size-1 has-text-centered">
       <a class="has-text-white" href="/">HN PDF</a>
@@ -24,6 +28,14 @@
         PDF(s) shared on <a class="has-text-black" href="https://news.ycombinator.com" target="_blank">Hackernews</a>
       </p>
   </div>
+  <form class="field has-addons has-text-centered columns is-centered" action="/search" method="get">
+    <div class="control has-text-centered">
+      <input class="input" type="text" name="text" placeholder="Search for text">
+    </div>
+    <div class="control">
+      <input class="button is-warning is-light" type="submit" value="Search">
+    </div>
+  </form>
 </section>
 
 <section class="section container p-6">

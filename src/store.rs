@@ -139,6 +139,11 @@ impl Item {
             "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents WHERE id = ?")?;
         Item::scan_rows(stmt, [id])?.into_iter().next().ok_or(StoreError::NotFound)
     }
+    pub fn search(conn: &mut MutexGuard<Connection>, text: &str) -> Result<Vec<Item>, StoreError> {
+        let mut stmt = conn.prepare(
+            "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents WHERE id in (SELECT id FROM content_search WHERE content_search MATCH ? ORDER BY rank LIMIT 50)")?;
+        Item::scan_rows(stmt, [text])
+    }
     fn scan_rows<P: rusqlite::Params>(mut stmt: Statement, p: P) -> Result<Vec<Item>, StoreError> {
         let entries = stmt.query_map(p, |row| {
             let kind_str: String = row.get(1)?;

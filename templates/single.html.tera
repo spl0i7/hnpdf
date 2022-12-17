@@ -3,7 +3,7 @@
 <div class="card mb-4">
   <header class="card-header">
     <a class="card-header-title" href="/item/{{entry.id}}">
-      {{entry.kind}} from {{entry.author}} <span class="pl-3 is-size-7">{{ entry.timestamp | date(format="%Y-%m-%d %H:%M UTC", timezone="UTC")}}</span>
+      {{entry.kind}} from {{entry.author}} <span class="pl-3 is-size-7">| {{ entry.timestamp | date(format="%Y-%m-%d %H:%M UTC", timezone="UTC")}}</span>
     </a>
   </header>
   <div class="card-content">
@@ -17,8 +17,8 @@
     </div>
     {% endif %}
     <div class="buttons">
-      <a class="button is-info" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
-      <a class="button is-success" href="{{entry.pdf_link}}" target="_blank">PDF</a>
+      <a class="button is-info is-light" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
+      <a class="button is-success is-light" href="{{entry.pdf_link}}" target="_blank">PDF</a>
     </div>
   </div>
 </div>
