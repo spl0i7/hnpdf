@@ -27,9 +27,7 @@ struct Config {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::init_from_env()?;
-
     let conn = db_connection(&config)?;
-
 
     let _ = background::start_scraping(conn.clone(), Duration::from_secs(config.scrape_interval)).await;
 

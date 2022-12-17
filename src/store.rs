@@ -104,7 +104,7 @@ impl Item {
             entry.comment_text = comment.clone();
         }
 
-        if entry.kind == ItemKind::Unknown {
+        if entry.kind == Unknown {
             return Err(ParseError);
         }
 
@@ -140,7 +140,7 @@ impl Item {
         Item::scan_rows(stmt, [id])?.into_iter().next().ok_or(StoreError::NotFound)
     }
     pub fn search(conn: &mut MutexGuard<Connection>, text: &str) -> Result<Vec<Item>, StoreError> {
-        let mut stmt = conn.prepare(
+        let stmt = conn.prepare(
             "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents WHERE id in (SELECT id FROM content_search WHERE content_search MATCH ? ORDER BY rank LIMIT 50)")?;
         Item::scan_rows(stmt, [text])
     }

@@ -1,10 +1,8 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 use rocket::{get, State};
-use rocket::http::private::Connection;
 use rocket::http::Status;
 use rocket_dyn_templates::context;
 use rocket_dyn_templates::Template;
-use tokio::sync::MutexGuard;
 use crate::FencedDB;
 use crate::store::{Item, StoreError};
 
