@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::time;
 use crate::{client, FencedDB};
-use crate::store::Entry;
+use crate::store::Item;
 
 pub(crate) async fn fetch_pdfs(conn: &mut FencedDB) -> Result<(), Box<dyn Error + '_>> {
     let mut hits = Vec::new();
@@ -11,13 +11,13 @@ pub(crate) async fn fetch_pdfs(conn: &mut FencedDB) -> Result<(), Box<dyn Error 
 
         hits.append(&mut root
             .hits.into_iter()
-            .filter_map(|x| Entry::from_hit(&x).ok())
-            .collect::<Vec<Entry>>());
+            .filter_map(|x| Item::from_hit(&x).ok())
+            .collect::<Vec<Item>>());
     }
 
     {
         let mut conn = conn.lock()?;
-        Entry::store_entries(&mut conn, &hits)?;
+        Item::store_entries(&mut conn, &hits)?;
     }
 
     Ok(())

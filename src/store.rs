@@ -4,16 +4,18 @@ use std::string::FromUtf8Error;
 use std::sync::MutexGuard;
 use regex::Regex;
 use rocket::serde::Serialize;
-use rusqlite::Connection;
+use rusqlite::{Connection, Statement};
 use crate::client::{Hit};
 use thiserror::Error;
-use crate::store::EntryKind::Unknown;
-use crate::store::StoreError::{Parse};
+use crate::store::ItemKind::Unknown;
+use crate::store::StoreError::{ParseError};
 
 #[derive(Error, Debug)]
 pub enum StoreError {
     #[error("...")]
-    Parse,
+    NotFound,
+    #[error("...")]
+    ParseError,
     #[error("...")]
     RegexError(#[from] regex::Error),
     #[error("...")]
@@ -23,29 +25,29 @@ pub enum StoreError {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize)]
-pub enum EntryKind {
+pub enum ItemKind {
     Story,
     Comment,
     Unknown,
 }
 
-impl Default for EntryKind {
+impl Default for ItemKind {
     fn default() -> Self {
         Unknown
     }
 }
 
-impl ToString for EntryKind {
+impl ToString for ItemKind {
     fn to_string(&self) -> String {
         match self {
-            EntryKind::Story => String::from("story"),
-            EntryKind::Comment => String::from("comment"),
-            EntryKind::Unknown => String::from("unknown")
+            ItemKind::Story => String::from("story"),
+            ItemKind::Comment => String::from("comment"),
+            ItemKind::Unknown => String::from("unknown")
         }
     }
 }
 
-impl FromStr for EntryKind {
+impl FromStr for ItemKind {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -58,9 +60,9 @@ impl FromStr for EntryKind {
 }
 
 #[derive(Debug, Default, Serialize)]
-pub struct Entry {
+pub struct Item {
     id: String,
-    kind: EntryKind,
+    kind: ItemKind,
     timestamp: u64,
     pdf_link: String,
     story_title: String,
@@ -70,9 +72,9 @@ pub struct Entry {
 }
 
 
-impl Entry {
-    pub fn from_hit(r: &Hit) -> Result<Entry, StoreError> {
-        let mut entry = Entry {
+impl Item {
+    pub fn from_hit(r: &Hit) -> Result<Item, StoreError> {
+        let mut entry = Item {
             id: r.object_id.clone(),
             timestamp: r.created_at_i,
             parent_id: format!("{}", r.parent_id.unwrap_or_default()),
@@ -88,22 +90,22 @@ impl Entry {
         }
 
         if let Some(u) = &r.url {
-            if let Ok(u) = Entry::extract_url(u) {
+            if let Ok(u) = Item::extract_url(u) {
                 entry.pdf_link = u;
-                entry.kind = EntryKind::Story;
+                entry.kind = ItemKind::Story;
             }
         }
 
         if let Some(comment) = &r.comment_text {
-            if let Ok(u) = Entry::extract_url(comment) {
+            if let Ok(u) = Item::extract_url(comment) {
                 entry.pdf_link = u;
-                entry.kind = EntryKind::Comment;
+                entry.kind = ItemKind::Comment;
             }
             entry.comment_text = comment.clone();
         }
 
-        if entry.kind == EntryKind::Unknown {
-            return Err(Parse);
+        if entry.kind == ItemKind::Unknown {
+            return Err(ParseError);
         }
 
 
@@ -112,14 +114,14 @@ impl Entry {
 
     fn extract_url(s: &str) -> Result<String, StoreError> {
         let re = Regex::new(r".*(https?://.*\.pdf)")?;
-        let caps = re.captures(s).ok_or(Parse)?;
+        let caps = re.captures(s).ok_or(ParseError)?;
 
         Ok(caps.get(1)
             .map_or("", |m| m.as_str())
             .to_string())
     }
 
-    pub fn store_entries(conn: &mut MutexGuard<Connection>, entries: &[Entry]) -> Result<(), StoreError> {
+    pub fn store_entries(conn: &mut MutexGuard<Connection>, entries: &[Item]) -> Result<(), StoreError> {
         for e in entries {
             conn.execute("INSERT OR IGNORE INTO contents(id, kind, timestamp, link, story_title, comment_text, parent_id, author) VALUES(?, ?, ?, ?, ?,?, ?, ?)",
                          [&e.id, &e.kind.to_string(), &format!("{}", e.timestamp), &e.pdf_link, &e.story_title, &e.comment_text, &e.parent_id, &e.author])?;
@@ -127,17 +129,22 @@ impl Entry {
 
         Ok(())
     }
-    pub fn get_entries(conn: &mut MutexGuard<Connection>, from: u64, limit: u64) -> Result<Vec<Entry>, StoreError> {
-        let mut stmt = conn.prepare(
+    pub fn get_list(conn: &mut MutexGuard<Connection>, from: u64, limit: u64) -> Result<Vec<Item>, StoreError> {
+        let stmt = conn.prepare(
             "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents WHERE timestamp < ? ORDER BY timestamp DESC LIMIT ?")?;
-
-        let entries = stmt.query_map([from, min(limit, 20)], |row| {
+        Item::scan_rows(stmt, [from, min(limit, 20)])
+    }
+    pub fn get_one(conn: &mut MutexGuard<Connection>, id: &str) -> Result<Item, StoreError> {
+        let stmt = conn.prepare(
+            "SELECT id, kind, timestamp, link, story_title, comment_text, parent_id, author FROM contents WHERE id = ?")?;
+        Item::scan_rows(stmt, [id])?.into_iter().next().ok_or(StoreError::NotFound)
+    }
+    fn scan_rows<P: rusqlite::Params>(mut stmt: Statement, p: P) -> Result<Vec<Item>, StoreError> {
+        let entries = stmt.query_map(p, |row| {
             let kind_str: String = row.get(1)?;
-
-
-            Ok(Entry {
+            Ok(Item {
                 id: row.get(0)?,
-                kind: EntryKind::from_str(kind_str.as_str()).unwrap(),
+                kind: ItemKind::from_str(kind_str.as_str()).unwrap(),
                 timestamp: row.get(2)?,
                 pdf_link: row.get(3)?,
                 story_title: row.get(4)?,
@@ -145,7 +152,7 @@ impl Entry {
                 parent_id: row.get(6)?,
                 author: row.get(7)?,
             })
-        })?.filter_map(|x| x.ok()).collect::<Vec<Entry>>();
+        })?.filter_map(|x| x.ok()).collect::<Vec<Item>>();
 
         Ok(entries)
     }
@@ -153,8 +160,9 @@ impl Entry {
 
 #[cfg(test)]
 mod tests {
+    use rocket::yansi::Color::Default;
     use crate::client::Hit;
-    use crate::store::Entry;
+    use crate::store::Item;
 
     #[test]
     fn test() {
@@ -163,20 +171,9 @@ mod tests {
                 created_at: "2022-12-13T13:05:57.000Z".to_string(),
                 title: Some("SEC Complaint Against Sam Bankman-Fried [pdf]".to_string()),
                 url: Some("https://www.sec.gov/litigation/complaints/2022/comp-pr2022-219.pdf".to_string()),
-                author: "".to_string(),
-                points: None,
-                story_text: Default::default(),
-                comment_text: None,
-                num_comments: None,
-                story_id: None,
-                story_title: None,
-                story_url: None,
-                parent_id: None,
-                created_at_i: 0,
-                tags: vec![],
-                object_id: "".to_string(),
+                ..Default::default()
             };
 
-        assert!(Entry::from_hit(&h).is_ok());
+        assert!(Item::from_hit(&h).is_ok());
     }
 }

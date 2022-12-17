@@ -8,4 +8,5 @@ CREATE TABLE IF NOT EXISTS contents  (
     parent_id TEXT NOT NULL,
     author TEXT NOT NULL
 );
+
 CREATE INDEX IF NOT EXISTS timestamp_idx ON contents (timestamp);

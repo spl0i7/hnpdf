@@ -1,0 +1,25 @@
+{% extends "head" %}
+{% block content %}
+<div class="card mb-4">
+  <header class="card-header">
+    <a class="card-header-title" href="/item/{{entry.id}}">
+      {{entry.kind}} from {{entry.author}} <span class="pl-3 is-size-7">{{ entry.timestamp | date(format="%Y-%m-%d %H:%M UTC", timezone="UTC")}}</span>
+    </a>
+  </header>
+  <div class="card-content">
+    <div class="content has-text-weight-bold">
+      <p> {{ entry.story_title }} </p>
+    </div>
+
+    {% if entry.comment_text %}
+    <div class="content is-clipped">
+      <b>Comment</b> <p>{{ entry.comment_text | safe }}<p>
+    </div>
+    {% endif %}
+    <div class="buttons">
+      <a class="button is-info" href="https://news.ycombinator.com/item?id={{entry.id}}" target="_blank">Original Post</a>
+      <a class="button is-success" href="{{entry.pdf_link}}" target="_blank">PDF</a>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% block head %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="This website is a collection of links to PDFs found on Hacker News. It collects PDFs which have been posted by the community as story or comment">
+  <title>Hacker News PDFs</title>
+  <link rel="preload" as="style" onload="this.rel='stylesheet'" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" as="style">
+  <style>
+    .hn-orange {
+      background-color: #ff6600
+    }
+  </style>
+  {% endblock head %}
+</head>
+<body>
+<section class="hero hn-orange">
+  <div class="hero-body">
+    <h1 class="title is-size-1 has-text-centered">
+      <a class="has-text-white" href="/">HN PDF</a>
+      </p>
+      <p class="subtitle has-text-white has-text-weight-bold">
+        PDF(s) shared on <a class="has-text-black" href="https://news.ycombinator.com" target="_blank">Hackernews</a>
+      </p>
+  </div>
+</section>
+
+<section class="section container p-6">
+  {% block content %}{% endblock content %}
+</section>
+</body>
+</html>
